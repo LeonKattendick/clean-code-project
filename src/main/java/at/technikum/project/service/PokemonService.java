@@ -3,6 +3,7 @@ package at.technikum.project.service;
 import at.technikum.project.persistence.model.PokemonEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PokemonService {
 
@@ -10,10 +11,8 @@ public interface PokemonService {
 
     List<String> getAllPokemonNames();
 
-    PokemonEntity getPokemonById(long id);
+    Optional<PokemonEntity> getPokemonByName(String name);
 
     PokemonEntity likePokemon(long id);
-
-    PokemonEntity dislikePokemon(long id);
 
 }

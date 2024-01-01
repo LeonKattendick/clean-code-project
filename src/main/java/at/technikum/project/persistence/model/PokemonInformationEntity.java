@@ -1,11 +1,9 @@
 package at.technikum.project.persistence.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -18,6 +16,7 @@ public class PokemonInformationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private long id;
 
     @JsonProperty("image_url")
@@ -25,7 +24,8 @@ public class PokemonInformationEntity {
 
     private int height;
 
-    @OneToMany(mappedBy = "pokemonInformation", cascade = CascadeType.ALL)
+    @With
+    @OneToMany(mappedBy = "pokemonInformation", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<PokemonTypeEntity> types;
 
 }

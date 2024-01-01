@@ -1,9 +1,12 @@
 package at.technikum.project;
 
 import at.technikum.project.persistence.model.PokemonEntity;
+import at.technikum.project.persistence.model.PokemonInformationEntity;
+import at.technikum.project.persistence.repository.PokemonInformationRepository;
 import at.technikum.project.persistence.repository.PokemonRepository;
 import at.technikum.project.service.HttpService;
 import at.technikum.project.util.pokeApi.PokeApiPokemonListResponse;
+import at.technikum.project.util.pokeApi.PokeApiPokemonResponse;
 import lombok.val;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +45,9 @@ class PokemonApiIntegrationTest {
     @Autowired
     private PokemonRepository pokemonRepository;
 
+    @Autowired
+    private PokemonInformationRepository pokemonInformationRepository;
+
     @Test
     void import_whenSucceeds_returnOk() throws Exception {
         when(httpService.call(anyString(), any())).thenReturn(pokeApiPokemonListResponse());
@@ -71,10 +77,46 @@ class PokemonApiIntegrationTest {
         assertEquals("[\"test\"]", mvcResult.getResponse().getContentAsString());
     }
 
+    @Test
+    void getPokemonByName_returnsFromDatabase() throws Exception {
+        val pokemon = pokemonRepository.save(pokemonEntity());
+        val information = pokemonInformationRepository.save(pokemonInformationEntity());
+
+        pokemonRepository.save(pokemon.withPokemonInformation(information));
+
+        val mvcResult = mockMvc.perform(get("/pokemon/test"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals("{\"name\":\"test\",\"likes\":0,\"pokemonInformation\":{\"height\":1,\"types\":[],\"image_url\":\"testUrl\"}}",
+                mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void getPokemonByName_loadsInformationFromApi_whenNotInDatabase() throws Exception {
+        when(httpService.call(anyString(), any())).thenReturn(pokeApiPokemonResponse());
+        pokemonRepository.save(pokemonEntity());
+
+        val mvcResult = mockMvc.perform(get("/pokemon/test"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals("{\"name\":\"test\",\"likes\":0,\"pokemonInformation\":{\"height\":1,\"types\":[],\"image_url\":\"testUrl\"}}",
+                mvcResult.getResponse().getContentAsString());
+    }
+
     private PokeApiPokemonListResponse pokeApiPokemonListResponse() {
         return new PokeApiPokemonListResponse(
                 0,
-                Collections.singletonList(new PokeApiPokemonListResponse.PokeApiPokemonResponse("test"))
+                Collections.singletonList(new PokeApiPokemonListResponse.PokeApiPokemonNameResponse("test"))
+        );
+    }
+
+    private PokeApiPokemonResponse pokeApiPokemonResponse() {
+        return new PokeApiPokemonResponse(
+                1,
+                new PokeApiPokemonResponse.PokeApiPokemonSpritesResponse("testUrl"),
+                Collections.emptyList()
         );
     }
 
@@ -82,7 +124,14 @@ class PokemonApiIntegrationTest {
         return PokemonEntity.builder()
                 .name("test")
                 .likes(0)
-                .dislikes(0)
+                .build();
+    }
+
+    private PokemonInformationEntity pokemonInformationEntity() {
+        return PokemonInformationEntity.builder()
+                .height(1)
+                .imageUrl("testUrl")
+                .types(Collections.emptyList())
                 .build();
     }
 }
