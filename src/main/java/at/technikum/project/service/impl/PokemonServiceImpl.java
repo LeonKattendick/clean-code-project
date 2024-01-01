@@ -5,47 +5,74 @@ import at.technikum.project.persistence.repository.PokemonRepository;
 import at.technikum.project.service.HttpService;
 import at.technikum.project.service.PokemonService;
 import at.technikum.project.util.pokeApi.PokeApiPokemonListResponse;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.decorators.Decorators;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.timelimiter.TimeLimiter;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class PokemonServiceImpl implements PokemonService {
 
-    private PokemonRepository pokemonRepository;
+    private final PokemonRepository pokemonRepository;
 
-    private HttpService httpService;
+    private final HttpService httpService;
 
-    private Retry retry;
+    private final Retry retry;
 
-    private CircuitBreaker circuitBreaker;
+    private final ThreadPoolBulkhead threadPoolBulkhead;
+
+    private final ScheduledExecutorService scheduledExecutorService;
+
+    private final CircuitBreaker circuitBreaker;
+
+    private final TimeLimiter timeLimiter;
+
+    @Value("${pokemon.poke.api.url}")
+    private String pokeApiUrl;
 
     @Override
     public void importPokemon() {
-        retry.executeRunnable(this::importPokemonWithoutRetry);
+        retry.executeRunnable(() -> {
+            try {
+                importPokemonWithoutRetry();
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private PokeApiPokemonListResponse loadPokemonFromApi() {
-        val response = httpService.call("https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0", PokeApiPokemonListResponse.class);
+        val response = httpService.call(pokeApiUrl + "?limit=100000&offset=0", PokeApiPokemonListResponse.class);
         log.info("Received {} Pokemon for import", response.count());
 
         return response;
     }
 
     @Transactional
-    public void importPokemonWithoutRetry() {
-        val response = circuitBreaker.executeSupplier(this::loadPokemonFromApi);
+    public void importPokemonWithoutRetry() throws ExecutionException, InterruptedException {
+        val decoratedResponse = Decorators.ofSupplier(this::loadPokemonFromApi)
+                .withThreadPoolBulkhead(threadPoolBulkhead)
+                .withTimeLimiter(timeLimiter, scheduledExecutorService)
+                .withCircuitBreaker(circuitBreaker)
+                .decorate();
+        val result = decoratedResponse.get().toCompletableFuture().get();
 
         pokemonRepository.deleteAll();
         log.info("Deleted all current Pokemon entries");
 
-        val mappedEntities = response.results()
+        val mappedEntities = result.results()
                 .stream()
                 .map(
                         (v) -> PokemonEntity.builder()
