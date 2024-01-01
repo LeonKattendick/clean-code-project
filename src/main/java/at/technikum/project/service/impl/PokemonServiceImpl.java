@@ -90,12 +90,12 @@ public class PokemonServiceImpl implements PokemonService {
 
         var pokemon = pokemonOptional.get();
         if (pokemon.getPokemonInformation() == null) {
-
             val information = pokemonInformationService.loadInformationForPokemon(pokemon);
-            pokemon.setPokemonInformation(information);
+            val pokemonWithInformation = pokemon.withPokemonInformation(information);
 
-            pokemon = pokemonRepository.save(pokemon);
+            pokemon = pokemonRepository.save(pokemonWithInformation);
         }
+
         return Optional.of(pokemon);
     }
 

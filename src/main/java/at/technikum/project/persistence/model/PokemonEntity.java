@@ -2,10 +2,7 @@ package at.technikum.project.persistence.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Builder
 @AllArgsConstructor
@@ -23,6 +20,7 @@ public class PokemonEntity {
 
     private int likes;
 
+    @With
     @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "information_id", referencedColumnName = "id")
     private PokemonInformationEntity pokemonInformation;

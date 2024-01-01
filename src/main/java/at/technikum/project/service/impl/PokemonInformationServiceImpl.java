@@ -2,11 +2,10 @@ package at.technikum.project.service.impl;
 
 import at.technikum.project.persistence.model.PokemonEntity;
 import at.technikum.project.persistence.model.PokemonInformationEntity;
-import at.technikum.project.persistence.model.PokemonTypeEntity;
 import at.technikum.project.persistence.repository.PokemonInformationRepository;
-import at.technikum.project.persistence.repository.PokemonTypeRepository;
 import at.technikum.project.service.HttpService;
 import at.technikum.project.service.PokemonInformationService;
+import at.technikum.project.service.PokemonTypeService;
 import at.technikum.project.util.ResilienceDecorator;
 import at.technikum.project.util.pokeApi.PokeApiPokemonResponse;
 import io.github.resilience4j.retry.Retry;
@@ -26,7 +25,7 @@ public class PokemonInformationServiceImpl implements PokemonInformationService 
 
     private final PokemonInformationRepository pokemonInformationRepository;
 
-    private final PokemonTypeRepository pokemonTypeRepository;
+    private final PokemonTypeService pokemonTypeService;
 
     private final HttpService httpService;
 
@@ -65,15 +64,9 @@ public class PokemonInformationServiceImpl implements PokemonInformationService 
                         .imageUrl(result.sprites().url())
                         .build()
         );
+        log.info("Saved information for {} under id {}", pokemon.getName(), informationEntity.getId());
 
-        val types = pokemonTypeRepository.saveAll(
-                result.types().stream().map(
-                        v -> PokemonTypeEntity.builder()
-                                .pokemonInformation(informationEntity)
-                                .type(v.type().name())
-                                .build()
-                ).toList()
-        );
+        val types = pokemonTypeService.saveTypes(informationEntity, result.types().stream().map(v -> v.type().name()).toList());
 
         return informationEntity.withTypes(types);
     }
