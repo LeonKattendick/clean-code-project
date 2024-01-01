@@ -1,7 +1,6 @@
 package at.technikum.project.service;
 
 import at.technikum.project.persistence.repository.PokemonRepository;
-import at.technikum.project.service.HttpService;
 import at.technikum.project.service.impl.PokemonServiceImpl;
 import at.technikum.project.util.*;
 import at.technikum.project.util.pokeApi.PokeApiPokemonListResponse;
@@ -30,6 +29,9 @@ class PokemonServiceImplTest {
     @Mock
     private HttpService httpService;
 
+    @Mock
+    private PokemonInformationService pokemonInformationService;
+
     private PokemonServiceImpl pokemonService;
 
     @BeforeEach
@@ -37,11 +39,14 @@ class PokemonServiceImplTest {
         pokemonService = new PokemonServiceImpl(
                 pokemonRepository,
                 httpService,
+                pokemonInformationService,
                 new PokemonRetryConfig(3, 100).retry(),
-                new PokemonBulkheadConfig().bulkhead(),
-                new PokemonExecutorService().scheduledExecutorService(),
-                new PokemonCircuitBreakerConfig(100, 2, 100).circuitBreaker(),
-                new PokemonTimeLimiterConfig(100).timeLimiter()
+                new ResilienceDecorator(
+                        new PokemonBulkheadConfig().bulkhead(),
+                        new PokemonExecutorService().scheduledExecutorService(),
+                        new PokemonCircuitBreakerConfig(100, 2, 100).circuitBreaker(),
+                        new PokemonTimeLimiterConfig(100).timeLimiter()
+                )
         );
     }
 

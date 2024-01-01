@@ -3,13 +3,11 @@ package at.technikum.project.service.impl;
 import at.technikum.project.persistence.model.PokemonEntity;
 import at.technikum.project.persistence.repository.PokemonRepository;
 import at.technikum.project.service.HttpService;
+import at.technikum.project.service.PokemonInformationService;
 import at.technikum.project.service.PokemonService;
+import at.technikum.project.util.ResilienceDecorator;
 import at.technikum.project.util.pokeApi.PokeApiPokemonListResponse;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.decorators.Decorators;
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.timelimiter.TimeLimiter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,15 +28,11 @@ public class PokemonServiceImpl implements PokemonService {
 
     private final HttpService httpService;
 
+    private final PokemonInformationService pokemonInformationService;
+
     private final Retry retry;
 
-    private final ThreadPoolBulkhead threadPoolBulkhead;
-
-    private final ScheduledExecutorService scheduledExecutorService;
-
-    private final CircuitBreaker circuitBreaker;
-
-    private final TimeLimiter timeLimiter;
+    private final ResilienceDecorator resilienceDecorator;
 
     @Value("${pokemon.poke.api.url}")
     private String pokeApiUrl;
@@ -64,12 +57,7 @@ public class PokemonServiceImpl implements PokemonService {
 
     @Transactional
     public void importPokemonWithoutRetry() throws ExecutionException, InterruptedException {
-        val decoratedResponse = Decorators.ofSupplier(this::loadPokemonFromApi)
-                .withThreadPoolBulkhead(threadPoolBulkhead)
-                .withTimeLimiter(timeLimiter, scheduledExecutorService)
-                .withCircuitBreaker(circuitBreaker)
-                .decorate();
-        val result = decoratedResponse.get().toCompletableFuture().get();
+        val result = resilienceDecorator.decorateAndGet(this::loadPokemonFromApi);
 
         pokemonRepository.deleteAll();
         log.info("Deleted all current Pokemon entries");
@@ -94,9 +82,21 @@ public class PokemonServiceImpl implements PokemonService {
         return pokemonRepository.findAll().stream().map(PokemonEntity::getName).toList();
     }
 
+    @Transactional
     @Override
     public Optional<PokemonEntity> getPokemonByName(String name) {
-        return pokemonRepository.findByName(name.toLowerCase());
+        val pokemonOptional = pokemonRepository.findByName(name);
+        if (pokemonOptional.isEmpty()) return Optional.empty();
+
+        var pokemon = pokemonOptional.get();
+        if (pokemon.getPokemonInformation() == null) {
+
+            val information = pokemonInformationService.loadInformationForPokemon(pokemon);
+            pokemon.setPokemonInformation(information);
+
+            pokemon = pokemonRepository.save(pokemon);
+        }
+        return Optional.of(pokemon);
     }
 
     @Override

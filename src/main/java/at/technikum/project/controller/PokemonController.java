@@ -6,12 +6,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @AllArgsConstructor
 @RestController
 @RequestMapping("/pokemon")
@@ -29,6 +31,7 @@ public class PokemonController {
         try {
             pokemonService.importPokemon();
         } catch (Exception e) {
+            log.error("An error occurred in 'importPokemon'", e);
             return ResponseEntity.internalServerError().build();
         }
         return ResponseEntity.ok().build();
@@ -52,9 +55,10 @@ public class PokemonController {
     @GetMapping("/{name}")
     public ResponseEntity<PokemonEntity> getPokemonByName(@PathVariable String name) {
         try {
-            val pokemon = pokemonService.getPokemonByName(name);
-            return pokemon.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+            val pokemonOptional = pokemonService.getPokemonByName(name.toLowerCase());
+            return pokemonOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
+            log.error("An error occurred in 'getPokemonByName'", e);
             return ResponseEntity.internalServerError().build();
         }
     }

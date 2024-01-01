@@ -74,7 +74,7 @@ class PokemonApiIntegrationTest {
     private PokeApiPokemonListResponse pokeApiPokemonListResponse() {
         return new PokeApiPokemonListResponse(
                 0,
-                Collections.singletonList(new PokeApiPokemonListResponse.PokeApiPokemonResponse("test"))
+                Collections.singletonList(new PokeApiPokemonListResponse.PokeApiPokemonNameResponse("test"))
         );
     }
 
