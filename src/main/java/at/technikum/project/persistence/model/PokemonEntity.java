@@ -21,8 +21,6 @@ public class PokemonEntity {
 
     private int likes;
 
-    private int dislikes;
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "information_id", referencedColumnName = "id")
     private PokemonInformationEntity pokemonInformation;

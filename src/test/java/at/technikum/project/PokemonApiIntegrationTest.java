@@ -82,7 +82,6 @@ class PokemonApiIntegrationTest {
         return PokemonEntity.builder()
                 .name("test")
                 .likes(0)
-                .dislikes(0)
                 .build();
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -79,7 +80,6 @@ public class PokemonServiceImpl implements PokemonService {
                         (v) -> PokemonEntity.builder()
                                 .name(v.name())
                                 .likes(0)
-                                .dislikes(0)
                                 .pokemonInformation(null)
                                 .build()
                 )
@@ -95,17 +95,12 @@ public class PokemonServiceImpl implements PokemonService {
     }
 
     @Override
-    public PokemonEntity getPokemonById(long id) {
-        return null;
+    public Optional<PokemonEntity> getPokemonByName(String name) {
+        return pokemonRepository.findByName(name.toLowerCase());
     }
 
     @Override
     public PokemonEntity likePokemon(long id) {
-        return null;
-    }
-
-    @Override
-    public PokemonEntity dislikePokemon(long id) {
         return null;
     }
 }
