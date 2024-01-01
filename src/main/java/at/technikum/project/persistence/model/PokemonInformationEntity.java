@@ -25,7 +25,7 @@ public class PokemonInformationEntity {
 
     private int height;
 
-    @OneToMany(mappedBy = "pokemonInformation")
+    @OneToMany(mappedBy = "pokemonInformation", cascade = CascadeType.ALL)
     private List<PokemonTypeEntity> types;
 
 }

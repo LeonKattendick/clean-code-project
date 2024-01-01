@@ -1,6 +1,5 @@
 package at.technikum.project.persistence.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,16 +17,13 @@ public class PokemonEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @JsonProperty("poke_api_id")
-    private long pokeApiId;
-
     private String name;
 
     private int likes;
 
     private int dislikes;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "information_id", referencedColumnName = "id")
     private PokemonInformationEntity pokemonInformation;
 
