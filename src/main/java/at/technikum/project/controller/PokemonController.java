@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,7 +23,12 @@ public class PokemonController {
             @ApiResponse(responseCode = "500", description = "An error occurred during fetching, deletion or saving")
     })
     @PostMapping("/import")
-    public void importPokemon() {
-        pokemonService.importPokemon();
+    public ResponseEntity<Void> importPokemon() {
+        try {
+            pokemonService.importPokemon();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
     }
 }

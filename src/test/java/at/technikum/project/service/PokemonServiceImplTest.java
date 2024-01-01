@@ -1,4 +1,4 @@
-package at.technikum.project;
+package at.technikum.project.service;
 
 import at.technikum.project.persistence.repository.PokemonRepository;
 import at.technikum.project.service.HttpService;
