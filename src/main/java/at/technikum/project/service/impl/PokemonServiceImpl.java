@@ -17,6 +17,7 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -86,6 +87,11 @@ public class PokemonServiceImpl implements PokemonService {
 
         pokemonRepository.saveAll(mappedEntities);
         log.info("Imported all {} new Pokemon entries", mappedEntities.size());
+    }
+
+    @Override
+    public List<String> getAllPokemonNames() {
+        return pokemonRepository.findAll().stream().map(PokemonEntity::getName).toList();
     }
 
     @Override
