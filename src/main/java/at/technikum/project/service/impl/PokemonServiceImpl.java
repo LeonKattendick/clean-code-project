@@ -99,8 +99,15 @@ public class PokemonServiceImpl implements PokemonService {
         return Optional.of(pokemon);
     }
 
+    @Transactional
     @Override
-    public PokemonEntity likePokemon(long id) {
-        return null;
+    public Optional<Integer> likePokemon(String name) {
+        val pokemonOptional = pokemonRepository.findByName(name);
+        if (pokemonOptional.isEmpty()) return Optional.empty();
+
+        var pokemon = pokemonOptional.get();
+        pokemon.setLikes(pokemon.getLikes() + 1);
+
+        return Optional.of(pokemonRepository.save(pokemon).getLikes());
     }
 }

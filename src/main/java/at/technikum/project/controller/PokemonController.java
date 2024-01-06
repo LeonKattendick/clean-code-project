@@ -62,4 +62,21 @@ public class PokemonController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @Operation(summary = "Like Pokemon", description = "Returns the new likes of the Pokemon")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The new likes of the Pokemon"),
+            @ApiResponse(responseCode = "404", description = "No Pokemon could be found with the provided name"),
+            @ApiResponse(responseCode = "500", description = "An error occurred while liking for the Pokemon"),
+    })
+    @PutMapping("/like/{name}")
+    public ResponseEntity<Integer> likePokemon(@PathVariable String name) {
+        try {
+            val pokemonOptional = pokemonService.likePokemon(name.toLowerCase());
+            return pokemonOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("An error occurred in 'likePokemon'", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

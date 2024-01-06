@@ -121,7 +121,6 @@ class PokemonServiceImplTest {
         verify(httpService, times(2)).call(anyString(), any());
     }
 
-
     @Test
     void retry_whenAllFail_failsAfterThirdTime() {
         when(httpService.call(anyString(), any())).thenThrow(new RuntimeException());
@@ -158,6 +157,23 @@ class PokemonServiceImplTest {
         verify(pokemonInformationService, times(1)).loadInformationForPokemon(any());
     }
 
+    @Test
+    void likePokemon_returnsEmpty_ifPokemonNotFound() {
+        when(pokemonRepository.findByName(anyString())).thenReturn(Optional.empty());
+
+        assertTrue(pokemonService.likePokemon("test").isEmpty());
+    }
+
+    @Test
+    void likePokemon_addsOneLike() {
+        when(pokemonRepository.findByName(anyString())).thenReturn(Optional.of(pokemonEntity(0)));
+        when(pokemonRepository.save(any())).thenReturn(pokemonEntity(1));
+
+        val pokemonOptional = pokemonService.likePokemon("test");
+        assertTrue(pokemonOptional.isPresent());
+        assertEquals(1, pokemonOptional.get());
+    }
+
     private PokeApiPokemonListResponse pokeApiPokemonListResponse() {
         return new PokeApiPokemonListResponse(0, Collections.emptyList());
     }
@@ -167,6 +183,13 @@ class PokemonServiceImplTest {
                 .name("test")
                 .likes(0)
                 .pokemonInformation(information)
+                .build();
+    }
+
+    private PokemonEntity pokemonEntity(int likes) {
+        return PokemonEntity.builder()
+                .name("test")
+                .likes(likes)
                 .build();
     }
 
