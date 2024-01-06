@@ -6,6 +6,12 @@ This project features a backend to access data from the pokeAPI via RestAPI Endp
 It was used to test and show practical implementation of clean code and resilience principles for the purpose of a lecture for a university project.  
 It features various tests to show the implementation of these principles.
 
+## 📦 Technology Stack
+- Language: Java
+- Framework: Spring Boot
+- Build Tool: Maven
+
+
 ## 🖥 Environment Support
 
 - Make sure you have Java installed on your machine.
@@ -25,7 +31,7 @@ Hint: If you had a H2 database in the past, make sure you clear existing databas
 
 Hint: The application is run under port `8080`.
 
-## 📦 Documentation (Swagger)
+## ⚙️ Documentation (Swagger)
 
 The Swagger UI documentation can be found under http://localhost:8080/swagger-ui/index.html.
 
