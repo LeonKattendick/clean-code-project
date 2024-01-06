@@ -14,7 +14,6 @@ It features various tests to show the implementation of these principles.
 
 Hint: If you had a H2 database in the past, make sure you clear existing databases with the same name.
 
-
 ## 🔨 Running the application
 The application is run under port `8080`.\
 
