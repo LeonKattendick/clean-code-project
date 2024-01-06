@@ -25,8 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -103,6 +102,29 @@ class PokemonApiIntegrationTest {
 
         assertEquals("{\"name\":\"test\",\"likes\":0,\"pokemonInformation\":{\"height\":1,\"types\":[],\"image_url\":\"testUrl\"}}",
                 mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void getPokemonByName_returnsNotFound_ifPokemonNotInDatabase() throws Exception {
+        mockMvc.perform(get("/pokemon/notFound"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void likePokemon_increasesTheLikesOfAPokemon() throws Exception {
+        pokemonRepository.save(pokemonEntity());
+
+        val mvcResult = mockMvc.perform(put("/pokemon/like/test"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals("1", mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void likePokemon_returnsNotFound_ifPokemonNotInDatabase() throws Exception {
+        mockMvc.perform(put("/pokemon/like/notFound"))
+                .andExpect(status().isNotFound());
     }
 
     private PokeApiPokemonListResponse pokeApiPokemonListResponse() {

@@ -13,6 +13,6 @@ public interface PokemonService {
 
     Optional<PokemonEntity> getPokemonByName(String name);
 
-    PokemonEntity likePokemon(long id);
+    Optional<Integer> likePokemon(String name);
 
 }
